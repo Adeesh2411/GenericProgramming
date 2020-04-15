@@ -1,0 +1,8 @@
+Project Name = Generic BinarySearchTree Builder
+Description :
+    In this library user can pass any kind of collection of Objects to the above template class which returns ImplementedBinarySearchTree. 
+This class also has the method to make the BST height balanced and also the different kinds of traversal ie in-order and 
+pre-order and post-order.
+There is functionality of adding and deleting the node to existed BST
+we have also overloaded all the necessary operators like equality , assignment etc
+There is also provision of providing rank to the object provided. If provided ,the class uses this rank to construct the BST
