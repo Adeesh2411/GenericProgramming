@@ -9,11 +9,11 @@ using namespace std;
 //inner class of binary tree
 template<typename T>
 class TreeStruct{    
-    TreeStruct(const T &obj, int r = -1):data_(obj), rank_(r){}
+    TreeStruct(const T &obj, bool rankExists =false, int r=-1):data_(obj), rank_(r),rankExists(rankExists){}
     int rank_;
     TreeStruct *left, *right, *up;
     T data_;
-
+    bool rankExists;
     bool operator<(const TreeStruct<T>& rhs);
     bool operator!=(const TreeStruct<T>& rhs);
     bool operator==(const TreeStruct<T>& rhs);
@@ -28,27 +28,38 @@ class TreeStruct{
 template<typename T1, typename T2 = typename T1::value_type>
 class BinaryTree{
     public:
-
         //constructors...
-        //copy and move constructor
+        //copy constructor
         BinaryTree(const BinaryTree<T1, T2> &rhs);
+        //move constructor
         BinaryTree(BinaryTree<T1, T2> &&rhs); 
+        
         //dealing with ranks
+        //passing entire object to act as node, provided given rank, object need not support '<' operator, must provide setFlag to true
+        BinaryTree(const T1 &unknownobject, int rank, bool SetFlag)
+        :givenObject(&unknownobject), setFlag(SetFlag), No_Of_Nodes(0), rank_(&rank){
+            initialise();
+        }
+        
+        //passing collection of objects with array of ranks, object need not support '<' operator
         BinaryTree(const T1 &unknownobject, int* rank)
         :givenObject(&unknownobject), setFlag(false),No_Of_Nodes(0), rank_(rank){
             createTree();
         } 
 
-        BinaryTree():No_Of_Nodes(0){} // for empty variable 
+        //creating empty Binarytree object
+        BinaryTree():No_Of_Nodes(0){} 
 
+        //passing entire object as a part of node, must provide the setFlag to true, and object must support '<' operator    
         BinaryTree(const T1&unknownObject, bool SetFlag):givenObject(&unknownObject), setFlag(SetFlag),No_Of_Nodes(0),rank_(nullptr){
-            initialise();//for creating a node for given object 
+            initialise();
+        }
+        //passing collection without rank and object must support '<' operator
+        BinaryTree(const T1 &unknownObject):givenObject(&unknownObject), No_Of_Nodes(0),setFlag(false), rank_(nullptr){
+            createTree(); 
         }
 
-        BinaryTree(const T1 &unknownObject):givenObject(&unknownObject), No_Of_Nodes(0),setFlag(false), rank_(nullptr){//entire collection is passed
-            createTree(); //create a tree for a collection
-        }
-
+        //distructor
         ~BinaryTree(){
             deleteAll(Start1);
             Start1 = nullptr;
@@ -57,14 +68,14 @@ class BinaryTree{
         void display();// to display the tree 
         
         template<typename T>
-        void addNode(const T &a, int rank = -1); // adding node at the specific position
+        void addNode(const T &a, bool rankExists = false, int rank = -1); // adding node 
 
         template<typename T>
         bool deleteNode(const T& obj);//
 
         void BalanceTree();//time complexity = O(n) and Space = O(n)(n = pointers to inner class)
         int NoOfNodes(); // returns the no of nodes
-        int No_Of_Level(); //get total no of levels TODO
+        //finding the given object in tree , returns true if present
         bool findNode(const T2& obj, int rank = -1);
 
         using value_type = T2;
@@ -77,8 +88,7 @@ class BinaryTree{
         void operator =(BinaryTree<T1, T2>&& rhs); // move() 
         bool operator==(const BinaryTree<T1, T2>& rhs); // equality operator
         bool operator!=(const BinaryTree<T1, T2>& rhs); // inequality operator
-        
-        
+
         //variables
         int *rank_; 
         bool setFlag;
@@ -93,11 +103,13 @@ class BinaryTree{
         void initialise();//Initialise the Start1 pointer for separate allocation
         bool cmp(TreeStruct<T2> &a, TreeStruct<T2>&b);
         void AssignNodes(TreeStruct<T2> *a, const TreeStruct<T2>* b);//used for copy operator
+        //operates '<' operator between a and b = a<b;
         bool cmpNodes(TreeStruct<T2> *a, const TreeStruct<T2>* b);
+
         bool SearchNode(TreeStruct<T2> ref, TreeStruct<T2>* st);
         //variables
         const T1* givenObject;
-        int No_Of_Nodes;   
+        int No_Of_Nodes;
         TreeStruct<T2> *Start1 = nullptr;
 };
 
@@ -109,29 +121,32 @@ void BinaryTree<T1, T2>::createTree(){
         if(ST){
             ++No_Of_Nodes;
              ST = false;
-            int R = -1;
-            if(rank_ != nullptr) R = *(rank_);
-            TreeStruct<T2> *Obj = new TreeStruct<T2>(*it, R);
+             TreeStruct<T2> *Obj=nullptr;
+            if(rank_ != nullptr){
+                Obj = new TreeStruct<T2>(*it, true, *(rank_));                
+            }
+            else
+                Obj = new TreeStruct<T2>(*it);       
             Obj->left = Obj->right = Obj->up = nullptr;
             Start1 = Obj;
         }
         else{
             if(rank_ == nullptr)
                 addNode(*it);
-            else addNode(*it, *(rank_+No_Of_Nodes));
+            else addNode(*it, true, *(rank_+No_Of_Nodes));
         }
     }
 }
 
 template<typename T1, typename T2>
 template<typename T>
-void BinaryTree<T1, T2>::addNode(const T &a, int rank){    //passed a collection first
-    if((Start1 ->rank_ == -1 && rank != -1 )||(Start1->rank_ !=-1 && rank == -1)){
+void BinaryTree<T1, T2>::addNode(const T &a, bool rankExists, int rank){    //passed a collection first
+    if((Start1 ->rankExists == false && rankExists != false )||(Start1->rankExists !=false && rankExists == false)){
         cout<<"Warning : Ambiguous with rank\n";return;
     }
     using innerType = T;
     ++No_Of_Nodes;
-    TreeStruct<innerType> *Node = new TreeStruct<innerType>(a, rank);
+    TreeStruct<innerType> *Node = new TreeStruct<innerType>(a, rankExists, rank);
 
     TreeStruct<innerType> *temp = Start1;
     TreeStruct<innerType> *prev = temp;
@@ -191,9 +206,14 @@ void BinaryTree<T1, T2>::deleteAll(TreeStruct<T2>* Start1){
 template<typename T1, typename T2>
 void BinaryTree<T1, T2>::initialise(){
     ++No_Of_Nodes;
-    TreeStruct<T2> *Obj = new TreeStruct<T2>(*givenObject);
-        Obj->left = Obj->right = Obj->up = nullptr;
-        Start1 = Obj;
+    TreeStruct<T2> *Obj = nullptr;
+    if(rank_ == nullptr) {
+        Obj = new TreeStruct<T2>(*givenObject);
+    }
+    else
+        Obj = new TreeStruct<T2>(*givenObject, true, *(rank_));
+    Obj->left = Obj->right = Obj->up = nullptr;
+    Start1 = Obj;
 }
 
 
@@ -376,7 +396,7 @@ void BinaryTree<T1, T2>::AssignNodes(TreeStruct<T2> *cur, const TreeStruct<T2>* 
 
 template<typename T1, typename T2>
 bool BinaryTree<T1, T2>:: cmp(TreeStruct<T2>& a,TreeStruct<T2>& b){
-    if(a.rank_ == -1 || b.rank_ == -1){
+    if(a.rankExists == false || b.rankExists == false){
         return a.data_<b.data_;
     }
     else {
