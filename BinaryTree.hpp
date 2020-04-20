@@ -92,7 +92,31 @@ class BinaryTree{
         //variables
         int *rank_; 
         bool setFlag;
-
+        
+        //iterator class(forward iterator)
+        class iterator{
+            //implement ++(pre and post for level order traversal)
+            public:
+                iterator(int x):curOffset(x){}
+                iterator(TreeStruct<T2> *curObj):curOffset(0), maxOffset(0){
+                    nodePointer.push_back(curObj);
+                    addChilds(curOffset);
+                }
+                iterator& operator++();//pre
+                iterator operator++(int);//post
+                iterator& operator--();//pre
+                iterator operator--(int);//post
+                T2& operator*(); 
+                bool operator==(const iterator& obj);
+                bool operator!=(const iterator& obj);
+                int curOffset;
+            private:
+                int maxOffset;
+                void addChilds(int offset);
+                vector<TreeStruct<T2>*> nodePointer;
+        };
+        iterator begin();
+        iterator end();
     private:
         void display(TreeStruct<T2> *start); // to display the tree
         void createTree(); // Creating tree if collection is given
@@ -490,4 +514,83 @@ bool BinaryTree<T1, T2>::SearchNode(TreeStruct<T2> ref1,TreeStruct<T2>* cur){
         else return SearchNode(ref1, cur->left) || SearchNode(ref1, cur->right);
     }
     return false;
+}
+
+//begin
+template<typename T1, typename T2>
+typename BinaryTree<T1, T2>::iterator BinaryTree<T1, T2>::begin(){
+    return(iterator(Start1));
+}
+
+template<typename T1, typename T2>
+typename BinaryTree<T1, T2>::iterator BinaryTree<T1, T2>::end(){
+    return iterator(No_Of_Nodes);
+}
+//for Iterator class
+//pre increment
+template<typename T1, typename T2>
+typename BinaryTree<T1, T2>::iterator& BinaryTree<T1, T2>::iterator::operator++(){
+    ++curOffset;
+    if(maxOffset == curOffset-1){
+        addChilds(curOffset-1);
+        ++maxOffset;
+    }
+    else{
+        ++curOffset;
+    }
+    return *this;
+}
+
+template<typename T1, typename T2>
+typename BinaryTree<T1, T2>::iterator BinaryTree<T1, T2>::iterator::operator++(int){
+    auto *temp = this;
+    ++curOffset;
+    if(maxOffset == curOffset-1){
+        addChilds(curOffset-1);
+        ++maxOffset;
+    }
+    else{
+        ++curOffset;
+    }
+    return *temp;
+}
+
+template<typename T1, typename T2>
+typename BinaryTree<T1, T2>::iterator BinaryTree<T1, T2>::iterator::operator--(int){
+    auto *temp = this;
+    --curOffset;
+    return temp;
+}
+
+template<typename T1, typename T2>
+typename BinaryTree<T1, T2>::iterator& BinaryTree<T1, T2>::iterator::operator--(){
+    ++curOffset;
+    return *this;
+}
+template<typename T1, typename T2>
+void BinaryTree<T1, T2>::iterator::addChilds(int offset){
+    if(offset == nodePointer.size()) return;
+    TreeStruct<T2>* obj = nodePointer[offset];
+    if(obj->left)
+        nodePointer.push_back(obj->left);
+    if(obj->right)
+        nodePointer.push_back(obj->right);    
+}
+
+template<typename T1, typename T2>
+T2& BinaryTree<T1, T2>::iterator::operator*(){
+    return (nodePointer[curOffset]->data_);  
+}
+
+template<typename T1, typename T2>
+bool BinaryTree<T1, T2>::iterator::operator==(const iterator& rhs){
+    if(rhs.curOffset == curOffset)
+        return true;
+    return false;
+}
+
+template<typename T1, typename T2>
+bool BinaryTree<T1, T2>::iterator::operator!=(const iterator& rhs){
+    if(rhs.curOffset==curOffset) return false;
+    return true;
 }

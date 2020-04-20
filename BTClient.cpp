@@ -58,9 +58,13 @@ int main(){
         //format =<decltype(), decltype()>(Object, true)
         BinaryTree<decltype(s), decltype(s)> b1(s, true);
         b1.addNode(string("xyz"));
-        b1.display();
-        b1.deleteNode(s);
-        b1.display();
+        // b1.display();
+        // b1.deleteNode(s);
+        // b1.display();
+
+        for(auto it=b1.begin();it!=b1.end();it++){
+            cout<<*it<<endl;
+        }
     }
     #endif
 }
