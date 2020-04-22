@@ -27,6 +27,11 @@ int main(){
         cout<<"deleting a node 4\n";
         b1.deleteNode(4);
         b1.display();
+        cout<<"displaying using iterator\n";
+        for(auto it=b1.begin();it!=b1.end();it++){
+            cout<<*it<<" ";
+        }
+        cout<<endl;
     }
     #endif
     #if 0
@@ -40,7 +45,7 @@ int main(){
         b1.deleteNode(vec2);
     }
     #endif
-    #if 0
+    #if 1
     {
         //passing collection with array of ranks
         //format =<decltype()>(collection, array)
@@ -50,17 +55,22 @@ int main(){
         b1.display();
         b1.deleteNode(62);
         b1.display();
+        cout<<"Using Iterator to print\n";
+        for(auto it=b1.begin();it!=b1.end();it++){
+            cout<<*it<<" ";
+        }
+        cout<<endl;
     }
     #endif
-    #if 1
+    #if 0
     {
         //passing collection which act as entire node without rank
         //format =<decltype(), decltype()>(Object, true)
         BinaryTree<decltype(s), decltype(s)> b1(s, true);
         b1.addNode(string("xyz"));
-        // b1.display();
-        // b1.deleteNode(s);
-        // b1.display();
+        b1.display();
+        b1.deleteNode(s);
+        b1.display();
 
         for(auto it=b1.begin();it!=b1.end();it++){
             cout<<*it<<endl;
