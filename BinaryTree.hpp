@@ -6,7 +6,7 @@
 #include<typeinfo>
 
 
-//inner class of binary tree which represents a node
+//inner class of binary tree
 template<typename T>
 class TreeStruct{    
     TreeStruct(const T &obj, bool rankExists =false, int r=-1):data_(obj), rank_(r),rankExists(rankExists){}
@@ -18,31 +18,31 @@ class TreeStruct{
     bool operator!=(const TreeStruct<T>& rhs);
     bool operator==(const TreeStruct<T>& rhs);
     
-    template<class T1, class T2, class T3>
+    template<class T1, class T2>
     friend class BinaryTree;
 };
 
 
 
 //Main class of binary tree
-template<typename T1, typename T2 = typename T1::value_type, typename T3=int>
+template<typename T1, typename T2 = typename T1::value_type>
 class BinaryTree{
     public:
         //constructors...
         //copy constructor
-        BinaryTree(const BinaryTree<T1, T2, T3> &rhs);
+        BinaryTree(const BinaryTree<T1, T2> &rhs);
         //move constructor
-        BinaryTree(BinaryTree<T1, T2, T3> &&rhs); 
+        BinaryTree(BinaryTree<T1, T2> &&rhs); 
         
         //dealing with ranks
         //passing entire object to act as node, provided given rank, object need not support '<' operator, must provide setFlag to true
-        BinaryTree(const T1 &unknownobject, T3 rank, bool SetFlag)
+        BinaryTree(const T1 &unknownobject, int rank, bool SetFlag)
         :givenObject(&unknownobject), setFlag(SetFlag), No_Of_Nodes(0), rank_(&rank){
             initialise();
         }
         
         //passing collection of objects with array of ranks, object need not support '<' operator
-        BinaryTree(const T1 &unknownobject, T3* rank)
+        BinaryTree(const T1 &unknownobject, int* rank)
         :givenObject(&unknownobject), setFlag(false),No_Of_Nodes(0), rank_(rank){
             createTree();
         } 
@@ -84,10 +84,10 @@ class BinaryTree{
         using reference = T2&;
 
         //operator overloading ...
-        void operator =(const BinaryTree<T1, T2, T3>& rhs); // copy operator (=)
-        void operator =(BinaryTree<T1, T2, T3>&& rhs); // move() 
-        bool operator==(const BinaryTree<T1, T2, T3>& rhs); // equality operator
-        bool operator!=(const BinaryTree<T1, T2, T3>& rhs); // inequality operator
+        void operator =(const BinaryTree<T1, T2>& rhs); // copy operator (=)
+        void operator =(BinaryTree<T1, T2>&& rhs); // move() 
+        bool operator==(const BinaryTree<T1, T2>& rhs); // equality operator
+        bool operator!=(const BinaryTree<T1, T2>& rhs); // inequality operator
 
         //variables
         int *rank_; 
@@ -108,7 +108,6 @@ class BinaryTree{
                 T2& operator*(); 
                 bool operator==(const iterator& obj);
                 bool operator!=(const iterator& obj);
-                int curOffset;
             private:
                 void addChilds();
                 std::queue<TreeStruct<T2>*> nodePointer;
@@ -136,8 +135,8 @@ class BinaryTree{
 };
 
 //all the function definition
-template<typename T1, typename T2, typename T3>
-void BinaryTree<T1, T2, T3>::createTree(){
+template<typename T1, typename T2>
+void BinaryTree<T1, T2>::createTree(){
     bool ST = true;
     for(auto it = std::begin(*givenObject); it!=std::end(*givenObject);++it){
         if(ST){
@@ -160,9 +159,9 @@ void BinaryTree<T1, T2, T3>::createTree(){
     }
 }
 
-template<typename T1, typename T2, typename T3>
+template<typename T1, typename T2>
 template<typename T>
-void BinaryTree<T1, T2, T3>::addNode(const T &a, bool rankExists, int rank){    //passed a collection first
+void BinaryTree<T1, T2>::addNode(const T &a, bool rankExists, int rank){    //passed a collection first
     if((Start1 ->rankExists == false && rankExists != false )||(Start1->rankExists !=false && rankExists == false)){
         std::cout<<"Warning : Ambiguous with rank\n";return;
     }
@@ -199,8 +198,8 @@ void BinaryTree<T1, T2, T3>::addNode(const T &a, bool rankExists, int rank){    
     return;
 }
 
-template<typename T1, typename T2, typename T3>
-void BinaryTree<T1, T2, T3>::display(TreeStruct<T2> *start){
+template<typename T1, typename T2>
+void BinaryTree<T1, T2>::display(TreeStruct<T2> *start){
     if(start){
         std::cout<<start->data_<<" ";
         display(start->left);
@@ -209,24 +208,24 @@ void BinaryTree<T1, T2, T3>::display(TreeStruct<T2> *start){
 
 }
 
-template<typename T1, typename T2, typename T3>
-void BinaryTree<T1, T2, T3>::display(){
+template<typename T1, typename T2>
+void BinaryTree<T1, T2>::display(){
     display(Start1);
     std::cout<<std::endl;
 }
 
-template<typename T1, typename T2, typename T3>
-void BinaryTree<T1, T2, T3>::deleteAll(TreeStruct<T2>* Start1){
-    if(Start1){
-        deleteAll(Start1->left);
-        deleteAll(Start1->right);
-        delete Start1;
-        Start1 = nullptr;
+template<typename T1, typename T2>
+void BinaryTree<T1, T2>::deleteAll(TreeStruct<T2>* Start){
+    if(Start){
+        deleteAll(Start->left);
+        deleteAll(Start->right);
+        delete Start;
+        Start = nullptr;
     }
 }
 
-template<typename T1, typename T2, typename T3>
-void BinaryTree<T1, T2, T3>::initialise(){
+template<typename T1, typename T2>
+void BinaryTree<T1, T2>::initialise(){
     ++No_Of_Nodes;
     TreeStruct<T2> *Obj = nullptr;
     if(rank_ == nullptr) {
@@ -239,24 +238,24 @@ void BinaryTree<T1, T2, T3>::initialise(){
 }
 
 
-template<typename T1, typename T2, typename T3>
-void BinaryTree<T1, T2, T3>::BalanceTree(){
+template<typename T1, typename T2>
+void BinaryTree<T1, T2>::BalanceTree(){
     std::vector<TreeStruct<T2>*> v;
     storeNode(Start1, v);
     Start1 = BuildBalancedTree(v, 0, v.size()-1);
     AssignTop(Start1,nullptr);
 }
 
-template<typename T1, typename T2, typename T3>
-void BinaryTree<T1, T2, T3>::storeNode(TreeStruct<T2>* root, std::vector<TreeStruct<T2>*> &v){
+template<typename T1, typename T2>
+void BinaryTree<T1, T2>::storeNode(TreeStruct<T2>* root, std::vector<TreeStruct<T2>*> &v){
     if(root){
         storeNode(root->left, v);
         v.push_back(root);
         storeNode(root->right, v);
     }
 }
-template<typename T1, typename T2, typename T3>
-void BinaryTree<T1, T2, T3>::AssignTop(TreeStruct<T2>* child, TreeStruct<T2>* parent){
+template<typename T1, typename T2>
+void BinaryTree<T1, T2>::AssignTop(TreeStruct<T2>* child, TreeStruct<T2>* parent){
     if(child){
         child->up = parent;
         AssignTop(child->left, child); AssignTop(child->right, child);
@@ -264,8 +263,8 @@ void BinaryTree<T1, T2, T3>::AssignTop(TreeStruct<T2>* child, TreeStruct<T2>* pa
 }
 
 
-template<typename T1, typename T2, typename T3>
-TreeStruct<T2>* BinaryTree<T1, T2, T3>::BuildBalancedTree(std::vector<TreeStruct<T2>*> &v, int start, int end){
+template<typename T1, typename T2>
+TreeStruct<T2>* BinaryTree<T1, T2>::BuildBalancedTree(std::vector<TreeStruct<T2>*> &v, int start, int end){
     if(start<=end){
         int mid = (start+end)/2;
        
@@ -276,14 +275,14 @@ TreeStruct<T2>* BinaryTree<T1, T2, T3>::BuildBalancedTree(std::vector<TreeStruct
     return nullptr;
 }
 
-template<typename T1, typename T2, typename T3>
-int BinaryTree<T1, T2, T3>::NoOfNodes(){
+template<typename T1, typename T2>
+int BinaryTree<T1, T2>::NoOfNodes(){
     return No_Of_Nodes;
 }
 
-template<typename T1, typename T, typename T3>
+template<typename T1, typename T>
 template<typename T2>
-bool BinaryTree<T1, T, T3>::deleteNode(const T2& node){
+bool BinaryTree<T1, T>::deleteNode(const T2& node){
     TreeStruct<T2>* temp;
     if(node == (Start1->data_)){//check for root node
         if(Start1->left == nullptr && Start1->right == nullptr){
@@ -384,8 +383,8 @@ bool TreeStruct<T>::operator!=(const TreeStruct<T>& rhs){
     return !(rhs.data_ == data_ && rhs.rank_ == rank_);
 }
 
-template<typename T1, typename T2, typename T3>
-void BinaryTree<T1, T2, T3>::operator =(const BinaryTree<T1, T2, T3>& rhs){   
+template<typename T1, typename T2>
+void BinaryTree<T1, T2>::operator =(const BinaryTree<T1, T2>& rhs){   
     deleteAll(Start1);
     givenObject= rhs.givenObject;
     //AssignNodes(Start1, rhs.Start1);
@@ -399,8 +398,8 @@ void BinaryTree<T1, T2, T3>::operator =(const BinaryTree<T1, T2, T3>& rhs){
     rank_ = rhs.rank_;
 }
 
-template<typename T1, typename T2, typename T3>
-void BinaryTree<T1, T2, T3>::AssignNodes(TreeStruct<T2> *cur, const TreeStruct<T2>* rhs){
+template<typename T1, typename T2>
+void BinaryTree<T1, T2>::AssignNodes(TreeStruct<T2> *cur, const TreeStruct<T2>* rhs){
     if(rhs){
         if(rhs->left){
             cur->left = new TreeStruct<T2>(rhs->left->data_, rhs->left->rank_);
@@ -416,8 +415,8 @@ void BinaryTree<T1, T2, T3>::AssignNodes(TreeStruct<T2> *cur, const TreeStruct<T
     }
 }
 
-template<typename T1, typename T2, typename T3>
-bool BinaryTree<T1, T2, T3>:: cmp(TreeStruct<T2>& a,TreeStruct<T2>& b){
+template<typename T1, typename T2>
+bool BinaryTree<T1, T2>:: cmp(TreeStruct<T2>& a,TreeStruct<T2>& b){
     if(a.rankExists == false || b.rankExists == false){
         return a.data_<b.data_;
     }
@@ -430,8 +429,8 @@ bool TreeStruct<T>::operator<(const TreeStruct<T>& rhs){
     return (this->data_)<rhs.data_;
 }
 
-template<typename T1, typename T2, typename T3>
-void BinaryTree<T1, T2, T3>::operator=(BinaryTree<T1,T2,T3>&& rhs){
+template<typename T1, typename T2>
+void BinaryTree<T1, T2>::operator=(BinaryTree<T1,T2>&& rhs){
     deleteAll(Start1);
     givenObject= rhs.givenObject;
     //AssignNodes(Start1, rhs.Start1);
@@ -447,18 +446,18 @@ void BinaryTree<T1, T2, T3>::operator=(BinaryTree<T1,T2,T3>&& rhs){
     rhs.Start1 = nullptr;
 }
 
-template<typename T1, typename T2, typename T3>
-bool BinaryTree<T1,T2,T3>::operator==(const BinaryTree<T1, T2, T3>& rhs){
+template<typename T1, typename T2>
+bool BinaryTree<T1,T2>::operator==(const BinaryTree<T1, T2>& rhs){
     return cmpNodes(Start1, rhs.Start1);
 }
 
-template<typename T1, typename T2, typename T3>
-bool BinaryTree<T1,T2,T3>::operator!=(const BinaryTree<T1, T2, T3>& rhs){
+template<typename T1, typename T2>
+bool BinaryTree<T1,T2>::operator!=(const BinaryTree<T1, T2>& rhs){
     return !cmpNodes(Start1, rhs.Start1);
 }
 
-template<typename T1, typename T2, typename T3>
-bool BinaryTree<T1, T2, T3>::cmpNodes(TreeStruct<T2> *a, const TreeStruct<T2>* b){
+template<typename T1, typename T2>
+bool BinaryTree<T1, T2>::cmpNodes(TreeStruct<T2> *a, const TreeStruct<T2>* b){
     if(a && b ){
         if(*a == *b){
             return cmpNodes(a->left, b->left) && cmpNodes(a->right, b->right);
@@ -472,8 +471,8 @@ bool BinaryTree<T1, T2, T3>::cmpNodes(TreeStruct<T2> *a, const TreeStruct<T2>* b
 }
 //copy and move ctors
 
-template<typename T1, typename T2, typename T3>
-BinaryTree<T1, T2, T3>::BinaryTree(const BinaryTree<T1, T2, T3>& rhs){
+template<typename T1, typename T2>
+BinaryTree<T1, T2>::BinaryTree(const BinaryTree<T1, T2>& rhs){
     givenObject= rhs.givenObject;
     if(rhs.Start1){
         Start1 = new TreeStruct<T2>(rhs.Start1->data_, rhs.Start1->rank_);
@@ -485,8 +484,8 @@ BinaryTree<T1, T2, T3>::BinaryTree(const BinaryTree<T1, T2, T3>& rhs){
     rank_ = rhs.rank_;
 }
 
-template<typename T1, typename T2, typename T3>
-BinaryTree<T1, T2, T3>::BinaryTree(BinaryTree<T1, T2, T3>&& rhs){
+template<typename T1, typename T2>
+BinaryTree<T1, T2>::BinaryTree(BinaryTree<T1, T2>&& rhs){
     givenObject= rhs.givenObject;
     if(rhs.Start1){
         Start1 = new TreeStruct<T2>(rhs.Start1->data_, rhs.Start1->rank_);
@@ -500,13 +499,13 @@ BinaryTree<T1, T2, T3>::BinaryTree(BinaryTree<T1, T2, T3>&& rhs){
     rhs.Start1 = nullptr;
 }
 
-template<typename T1, typename T2, typename T3>
-bool BinaryTree<T1, T2, T3>::findNode(const T2& obj, int rank){
+template<typename T1, typename T2>
+bool BinaryTree<T1, T2>::findNode(const T2& obj, int rank){
     return SearchNode(TreeStruct<T2>(obj, rank), Start1);
 }
 
-template<typename T1, typename T2, typename T3>
-bool BinaryTree<T1, T2, T3>::SearchNode(TreeStruct<T2> ref1,TreeStruct<T2>* cur){
+template<typename T1, typename T2>
+bool BinaryTree<T1, T2>::SearchNode(TreeStruct<T2> ref1,TreeStruct<T2>* cur){
     if(cur){
         if(*cur == ref1) return true;
         else return SearchNode(ref1, cur->left) || SearchNode(ref1, cur->right);
@@ -515,49 +514,51 @@ bool BinaryTree<T1, T2, T3>::SearchNode(TreeStruct<T2> ref1,TreeStruct<T2>* cur)
 }
 
 //begin
-template<typename T1, typename T2, typename T3>
-typename BinaryTree<T1, T2, T3>::iterator BinaryTree<T1, T2, T3>::begin(){
+template<typename T1, typename T2>
+typename BinaryTree<T1, T2>::iterator BinaryTree<T1, T2>::begin(){
     return(iterator(Start1));
 }
 
-template<typename T1, typename T2, typename T3>
-typename BinaryTree<T1, T2, T3>::iterator BinaryTree<T1, T2, T3>::end(){
+template<typename T1, typename T2>
+typename BinaryTree<T1, T2>::iterator BinaryTree<T1, T2>::end(){
     return iterator(nullptr);
 }
 //for Iterator class
 //pre increment
-template<typename T1, typename T2, typename T3>
-typename BinaryTree<T1, T2, T3>::iterator& BinaryTree<T1, T2, T3>::iterator::operator++(){
+template<typename T1, typename T2>
+typename BinaryTree<T1, T2>::iterator& BinaryTree<T1, T2>::iterator::operator++(){
     nodePointer.pop();
     addChilds();
     return *this;
 }
 
-template<typename T1, typename T2, typename T3>
-typename BinaryTree<T1, T2, T3>::iterator BinaryTree<T1, T2, T3>::iterator::operator++(int){
+template<typename T1, typename T2>
+typename BinaryTree<T1, T2>::iterator BinaryTree<T1, T2>::iterator::operator++(int){
     auto *temp = this;
     nodePointer.pop();
     addChilds();
     return *temp;
 }
 
-template<typename T1, typename T2, typename T3>
-void BinaryTree<T1, T2, T3>::iterator::addChilds(){
+template<typename T1, typename T2>
+void BinaryTree<T1, T2>::iterator::addChilds(){
     TreeStruct<T2>* temp = nodePointer.front();
-    if(!temp) return;
-    if(temp->left) 
+    if(temp == nullptr) return;
+    if(temp->left) {
         nodePointer.push(temp->left);
-    if(temp->right)
+    }
+    if(temp->right){
         nodePointer.push(temp->right);
+    }
 }
 
-template<typename T1, typename T2, typename T3>
-T2& BinaryTree<T1, T2, T3>::iterator::operator*(){
+template<typename T1, typename T2>
+T2& BinaryTree<T1, T2>::iterator::operator*(){
     return (nodePointer.front()->data_);  
 }
 
-template<typename T1, typename T2, typename T3>
-bool BinaryTree<T1, T2, T3>::iterator::operator==(const iterator& rhs){
+template<typename T1, typename T2>
+bool BinaryTree<T1, T2>::iterator::operator==(const iterator& rhs){
     if(nodePointer.size() == 0 && rhs.nodePointer.size() == 0) 
         return true;
     else if(nodePointer.size() == 0 || rhs.nodePointer.size() == 0){
@@ -569,8 +570,8 @@ bool BinaryTree<T1, T2, T3>::iterator::operator==(const iterator& rhs){
     return false;
 }
 
-template<typename T1, typename T2, typename T3>
-bool BinaryTree<T1, T2, T3>::iterator::operator!=(const iterator& rhs){
+template<typename T1, typename T2>
+bool BinaryTree<T1, T2>::iterator::operator!=(const iterator& rhs){
     if(nodePointer.size() == 0 && rhs.nodePointer.size() == 0) 
         return false;
     else if(nodePointer.size() == 0 || rhs.nodePointer.size() == 0){
