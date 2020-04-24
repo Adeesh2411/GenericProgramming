@@ -10,6 +10,9 @@
 template<typename T>
 class TreeStruct{    
     TreeStruct(const T &obj, bool rankExists =false, int r=-1):data_(obj), rank_(r),rankExists(rankExists){}
+    ~TreeStruct(){
+        left = right = up = nullptr;
+    }
     int rank_;
     TreeStruct *left, *right, *up;
     T data_;
@@ -40,13 +43,11 @@ class BinaryTree{
         :givenObject(&unknownobject), setFlag(SetFlag), No_Of_Nodes(0), rank_(&rank){
             initialise();
         }
-        
         //passing collection of objects with array of ranks, object need not support '<' operator
         BinaryTree(const T1 &unknownobject, int* rank)
         :givenObject(&unknownobject), setFlag(false),No_Of_Nodes(0), rank_(rank){
             createTree();
         } 
-
         //creating empty Binarytree object
         BinaryTree():No_Of_Nodes(0){} 
 
@@ -65,7 +66,10 @@ class BinaryTree{
             Start1 = nullptr;
         }
         //function declarations
-        void display();// to display the tree 
+        //void display();// to display the tree 
+        void inOrder();
+        void preOrder();
+        void postOrder();
         
         template<typename T>
         void addNode(const T &a, bool rankExists = false, int rank = -1); // adding node 
@@ -77,7 +81,7 @@ class BinaryTree{
         int NoOfNodes(); // returns the no of nodes
         //finding the given object in tree , returns true if present
         bool findNode(const T2& obj, int rank = -1);
-
+        
         using value_type = T2;
         using pointer = T2*;
         using const_reference = const T2&;
@@ -88,7 +92,7 @@ class BinaryTree{
         void operator =(BinaryTree<T1, T2>&& rhs); // move() 
         bool operator==(const BinaryTree<T1, T2>& rhs); // equality operator
         bool operator!=(const BinaryTree<T1, T2>& rhs); // inequality operator
-
+        BinaryTree<T1, T2> operator+(const BinaryTree<T1, T2>&rhs);//merge two binary Tree
         //variables
         int *rank_; 
         bool setFlag;
@@ -115,7 +119,7 @@ class BinaryTree{
         iterator begin();
         iterator end();
     private:
-        void display(TreeStruct<T2> *start); // to display the tree
+        void display(TreeStruct<T2> *start, int); // to display the tree
         void createTree(); // Creating tree if collection is given
         void storeNode(TreeStruct<T2>* St, std::vector<TreeStruct<T2>*> &v1);// store all the nodes
         TreeStruct<T2>* BuildBalancedTree(std::vector<TreeStruct<T2>*> &v1, int start, int end);// for building balance tree
@@ -126,7 +130,7 @@ class BinaryTree{
         void AssignNodes(TreeStruct<T2> *a, const TreeStruct<T2>* b);//used for copy operator
         //operates '<' operator between a and b = a<b;
         bool cmpNodes(TreeStruct<T2> *a, const TreeStruct<T2>* b);
-
+        void RecurseAndAdd(BinaryTree<T1, T2>&, const TreeStruct<T2>* rhs,bool);//
         bool SearchNode(TreeStruct<T2> ref, TreeStruct<T2>* st);
         //variables
         const T1* givenObject;
@@ -197,31 +201,63 @@ void BinaryTree<T1, T2>::addNode(const T &a, bool rankExists, int rank){    //pa
     }
     return;
 }
-
+//val:1 =>inOrder, 2=>preOrder, 3=>postOrder
 template<typename T1, typename T2>
-void BinaryTree<T1, T2>::display(TreeStruct<T2> *start){
+void BinaryTree<T1, T2>::display(TreeStruct<T2> *start, int val){
     if(start){
-        std::cout<<start->data_<<" ";
-        display(start->left);
-        display(start->right);
+        if(val == 1){//left , root, right = inOrder
+            display(start->left, val);
+            std::cout<<start->data_<<" ";
+            display(start->right, val);
+        }
+        else if(val == 2){//root ,left, right = preOrder
+            std::cout<<start->data_<<" ";
+            display(start->left, val);
+            display(start->right, val);
+        }
+        else{ // left, right, root = postOrder
+            display(start->left, val);
+            display(start->right, val);
+            std::cout<<start->data_<<" ";
+        }
     }
 
 }
 
 template<typename T1, typename T2>
-void BinaryTree<T1, T2>::display(){
-    display(Start1);
+void BinaryTree<T1, T2>::inOrder(){
+    display(Start1, 1);
     std::cout<<std::endl;
 }
 
 template<typename T1, typename T2>
-void BinaryTree<T1, T2>::deleteAll(TreeStruct<T2>* Start){
-    if(Start){
-        deleteAll(Start->left);
-        deleteAll(Start->right);
-        delete Start;
-        Start = nullptr;
+void BinaryTree<T1, T2>::preOrder(){
+    display(Start1, 2);
+    std::cout<<std::endl;
+}
+
+template<typename T1, typename T2>
+void BinaryTree<T1, T2>::postOrder(){
+    display(Start1, 3);
+    std::cout<<std::endl;
+}
+template<typename T1, typename T2>
+void BinaryTree<T1, T2>::deleteAll(TreeStruct<T2>* root){
+    if(root==nullptr) return;
+    std::queue<TreeStruct<T2>*> que;
+    que.push(root);
+    
+    while(!que.empty()){
+        TreeStruct<T2> *temp = que.front();
+        que.pop();
+        if(temp->left)
+            que.push(temp->left);
+        if(temp->right) 
+            que.push(temp->right);
+        
+        delete temp;
     }
+    return;
 }
 
 template<typename T1, typename T2>
@@ -402,13 +438,13 @@ template<typename T1, typename T2>
 void BinaryTree<T1, T2>::AssignNodes(TreeStruct<T2> *cur, const TreeStruct<T2>* rhs){
     if(rhs){
         if(rhs->left){
-            cur->left = new TreeStruct<T2>(rhs->left->data_, rhs->left->rank_);
+            cur->left = new TreeStruct<T2>(rhs->left->data_, rhs->left->rankExists, rhs->left->rank_);
             AssignNodes(cur->left, rhs->left);
         }
         else cur->left = nullptr;
         
         if(rhs->right){
-            cur->right = new TreeStruct<T2>(rhs->right->data_, rhs->right->rank_);
+            cur->right = new TreeStruct<T2>(rhs->right->data_, rhs->right->rankExists, rhs->right->rank_);
             AssignNodes(cur->right, rhs->right);
         }
         else cur->right = nullptr;
@@ -469,13 +505,32 @@ bool BinaryTree<T1, T2>::cmpNodes(TreeStruct<T2> *a, const TreeStruct<T2>* b){
     else if(a || b) return false;
     return true;
 }
+
+template<typename T1, typename T2>
+BinaryTree<T1, T2> BinaryTree<T1,T2>::operator+(const BinaryTree<T1, T2>& rhs){
+    BinaryTree<T1, T2> temp(*this);
+      
+    RecurseAndAdd(temp, rhs.Start1, rhs.Start1->rankExists);
+    return temp;
+}
+
+template<typename T1, typename T2>
+void BinaryTree<T1,T2>::RecurseAndAdd(BinaryTree<T1, T2>& cur, const TreeStruct<T2>* rhs, bool rankexists){
+    if(rhs){
+        cur.addNode(rhs->data_, rankexists, rhs->rank_);
+        if(rhs->left) 
+            RecurseAndAdd(cur, rhs->left, rankexists);
+        if(rhs->right)
+            RecurseAndAdd(cur, rhs->right,rankexists);
+    }
+}
 //copy and move ctors
 
 template<typename T1, typename T2>
 BinaryTree<T1, T2>::BinaryTree(const BinaryTree<T1, T2>& rhs){
     givenObject= rhs.givenObject;
     if(rhs.Start1){
-        Start1 = new TreeStruct<T2>(rhs.Start1->data_, rhs.Start1->rank_);
+        Start1 = new TreeStruct<T2>(rhs.Start1->data_, rhs.Start1->rankExists, rhs.Start1->rank_);
         AssignNodes(Start1, rhs.Start1);    
     }
     AssignTop(Start1, nullptr);
