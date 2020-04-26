@@ -112,6 +112,7 @@ class BinaryTree{
                 T2& operator*(); 
                 bool operator==(const iterator& obj);
                 bool operator!=(const iterator& obj);
+                bool isLeafNode();
             private:
                 void addChilds();
                 std::queue<TreeStruct<T2>*> nodePointer;
@@ -127,6 +128,7 @@ class BinaryTree{
         void deleteAll(TreeStruct<T2>*); // called by dtor at the end 
         void initialise();//Initialise the Start1 pointer for separate allocation
         bool cmp(TreeStruct<T2> &a, TreeStruct<T2>&b);
+        bool cmpEq(TreeStruct<T2> &a, TreeStruct<T2>&b);
         void AssignNodes(TreeStruct<T2> *a, const TreeStruct<T2>* b);//used for copy operator
         //operates '<' operator between a and b = a<b;
         bool cmpNodes(TreeStruct<T2> *a, const TreeStruct<T2>* b);
@@ -158,7 +160,13 @@ void BinaryTree<T1, T2>::createTree(){
         else{
             if(rank_ == nullptr)
                 addNode(*it);
-            else addNode(*it, true, *(rank_+No_Of_Nodes));
+            else {
+                if(rank_+No_Of_Nodes == nullptr){
+                    std::cout<<"Rank has not specified \n";
+                    return;
+                }
+                addNode(*it, true, *(rank_+No_Of_Nodes));
+            }
         }
     }
 }
@@ -172,7 +180,9 @@ void BinaryTree<T1, T2>::addNode(const T &a, bool rankExists, int rank){    //pa
     using innerType = T;
     ++No_Of_Nodes;
     TreeStruct<innerType> *Node = new TreeStruct<innerType>(a, rankExists, rank);
-
+    Node->left = nullptr;
+    Node->right = nullptr;
+    Node->up = nullptr;
     TreeStruct<innerType> *temp = Start1;
     TreeStruct<innerType> *prev = temp;
 
@@ -181,15 +191,20 @@ void BinaryTree<T1, T2>::addNode(const T &a, bool rankExists, int rank){    //pa
         Start1 = Node;
         return;
     }
-
-    while(temp){
+    
+    while(temp!=nullptr){
         prev = temp;
+        if(cmpEq(*temp, *Node)){
+            std::cout<<"warning : duplication of node is not allowed\n";
+            return;
+        }
         if(cmp(*temp, *Node)){
             temp=temp->right;
         }
         else{
             temp = temp->left;
-        }   
+        }  
+         
     }
     if(prev && cmp(*prev, *Node)){
         prev->right = Node;
@@ -204,7 +219,7 @@ void BinaryTree<T1, T2>::addNode(const T &a, bool rankExists, int rank){    //pa
 //val:1 =>inOrder, 2=>preOrder, 3=>postOrder
 template<typename T1, typename T2>
 void BinaryTree<T1, T2>::display(TreeStruct<T2> *start, int val){
-    if(start){
+    if(start!= nullptr){
         if(val == 1){//left , root, right = inOrder
             display(start->left, val);
             std::cout<<start->data_<<" ";
@@ -226,18 +241,21 @@ void BinaryTree<T1, T2>::display(TreeStruct<T2> *start, int val){
 
 template<typename T1, typename T2>
 void BinaryTree<T1, T2>::inOrder(){
+    std::cout<<"inOrder Traversal = ";
     display(Start1, 1);
     std::cout<<std::endl;
 }
 
 template<typename T1, typename T2>
 void BinaryTree<T1, T2>::preOrder(){
+    std::cout<<"preOrder Traversal = ";
     display(Start1, 2);
     std::cout<<std::endl;
 }
 
 template<typename T1, typename T2>
 void BinaryTree<T1, T2>::postOrder(){
+    std::cout<<"postOrder Traversal = ";
     display(Start1, 3);
     std::cout<<std::endl;
 }
@@ -278,21 +296,26 @@ template<typename T1, typename T2>
 void BinaryTree<T1, T2>::BalanceTree(){
     std::vector<TreeStruct<T2>*> v;
     storeNode(Start1, v);
-    Start1 = BuildBalancedTree(v, 0, v.size()-1);
-    AssignTop(Start1,nullptr);
+    Start1 = BuildBalancedTree(v,0, No_Of_Nodes-1);
+    AssignTop(Start1, nullptr);
 }
+
+
 
 template<typename T1, typename T2>
 void BinaryTree<T1, T2>::storeNode(TreeStruct<T2>* root, std::vector<TreeStruct<T2>*> &v){
-    if(root){
+    if(root!=nullptr){
         storeNode(root->left, v);
         v.push_back(root);
         storeNode(root->right, v);
+        return;
     }
+    return;
 }
 template<typename T1, typename T2>
 void BinaryTree<T1, T2>::AssignTop(TreeStruct<T2>* child, TreeStruct<T2>* parent){
     if(child){
+        child->up = nullptr;
         child->up = parent;
         AssignTop(child->left, child); AssignTop(child->right, child);
     }
@@ -301,9 +324,9 @@ void BinaryTree<T1, T2>::AssignTop(TreeStruct<T2>* child, TreeStruct<T2>* parent
 
 template<typename T1, typename T2>
 TreeStruct<T2>* BinaryTree<T1, T2>::BuildBalancedTree(std::vector<TreeStruct<T2>*> &v, int start, int end){
+    
     if(start<=end){
         int mid = (start+end)/2;
-       
         v[mid]->left = BuildBalancedTree(v, start, mid - 1);
         v[mid]->right = BuildBalancedTree(v, mid+1, end); 
         return v[mid];
@@ -319,7 +342,7 @@ int BinaryTree<T1, T2>::NoOfNodes(){
 template<typename T1, typename T>
 template<typename T2>
 bool BinaryTree<T1, T>::deleteNode(const T2& node){
-    TreeStruct<T2>* temp;
+    TreeStruct<T2>* temp = nullptr;
     if(node == (Start1->data_)){//check for root node
         if(Start1->left == nullptr && Start1->right == nullptr){
             delete Start1;
@@ -359,37 +382,57 @@ bool BinaryTree<T1, T>::deleteNode(const T2& node){
     std::queue<TreeStruct<T2>*> que;
     que.push(Start1);
     
-    TreeStruct<T2>* rt;
+    TreeStruct<T2>* rt=nullptr;
     while(!que.empty()){
         temp = que.front();
         if(temp->data_ == node){
-            
+            No_Of_Nodes--;
             if(temp->left ==nullptr && temp->right == nullptr){
                 if(temp->up->left && temp->up->left->data_ == node) temp->up->left = nullptr;
                 else temp->up->right = nullptr;
+                temp->up=nullptr;
                 delete temp;
                 return true;
             }
             
-            else if(temp->left == nullptr  ){
+            else if(temp->left == nullptr){
                 if(temp->up->left && temp->up->left->data_ == node){
                     temp->up->left = temp->right;
+                    temp->right->up = temp->up;
+
                 }
                 else{
                     temp->up->right = temp->right;
+                    temp->right->up = temp->up;
                 }
+                temp->left = temp->right = temp->up = nullptr;
+                std::cout<<"left is null\n";
             }
             else if(temp->right == nullptr){
                 if(temp->up->left && temp->up->left->data_ == node){
                     temp->up->left = temp->left;
+                    temp->left->up=temp->up;
                 }
                 else{
                     temp->up->right = temp->left;
+                    temp->right->up=temp->up;
                 }
+                temp->left = temp->right = temp->up =nullptr;
+
             }//both end is present
             else{
                 rt = temp->right;
+                if(rt->left == nullptr){
+                    rt->left = temp->left;
+                    if(temp->up->left && temp->up->left->data_ == node){
+                        temp->up->left = rt;
+                    }
+                    else temp->up->right = rt;    
+                    temp->up = nullptr; temp->left = nullptr; temp->right = nullptr;
+                    return true;
+                }
                 while(rt->left) rt = rt->left;
+                
                 rt->up->left = rt->right;
                 rt->up = temp->up;
                 if(temp->up->left && temp->up->left->data_ == node){
@@ -406,7 +449,7 @@ bool BinaryTree<T1, T>::deleteNode(const T2& node){
         if(temp->left) que.push(temp->left);
         if(temp->right) que.push(temp->right);
     }
-    std::cout<<"given node is not present in the Tree\n";
+    std::cout<<"Warning : given node is not present in the Tree\n";
     return false;
 }
 
@@ -458,6 +501,16 @@ bool BinaryTree<T1, T2>:: cmp(TreeStruct<T2>& a,TreeStruct<T2>& b){
     }
     else {
         return a.rank_<b.rank_;
+    }
+}
+
+template<typename T1, typename T2>
+bool BinaryTree<T1, T2>:: cmpEq(TreeStruct<T2>& a,TreeStruct<T2>& b){
+    if(a.rankExists == false || b.rankExists == false){
+        return a.data_ == b.data_;
+    }
+    else {
+        return a.rank_ == b.rank_;
     }
 }
 template<typename T>
@@ -634,4 +687,16 @@ bool BinaryTree<T1, T2>::iterator::operator!=(const iterator& rhs){
     }
     if(nodePointer.front()==rhs.nodePointer.front()) return false;
     return true;
+}
+
+template<typename T1, typename T2>
+bool BinaryTree<T1, T2>::iterator::isLeafNode(){
+    if(nodePointer.size()!=0){
+        if(nodePointer.front()->left == nullptr && nodePointer.front()->right == nullptr)
+            return true;
+        else
+            return false;
+    }
+    std::cout<<"Empty BinarySearchTree\n";
+    return false;
 }
