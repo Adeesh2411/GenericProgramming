@@ -93,6 +93,7 @@ class BinaryTree{
         bool operator==(const BinaryTree<T1, T2>& rhs); // equality operator
         bool operator!=(const BinaryTree<T1, T2>& rhs); // inequality operator
         BinaryTree<T1, T2> operator+(const BinaryTree<T1, T2>&rhs);//merge two binary Tree
+        void erase();//remove all nodes
         //variables
         int *rank_; 
         bool setFlag;
@@ -276,6 +277,15 @@ void BinaryTree<T1, T2>::deleteAll(TreeStruct<T2>* root){
         delete temp;
     }
     return;
+}
+
+template<typename T1, typename T2>
+void BinaryTree<T1, T2>::erase(){
+    deleteAll(Start1);
+    delete Start1;
+    Start1 = nullptr;
+    No_Of_Nodes = 0;
+    givenObject = nullptr;
 }
 
 template<typename T1, typename T2>
