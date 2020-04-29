@@ -4,6 +4,7 @@
 #include<initializer_list>
 #include "BinaryTree.hpp"
 #include<string>
+#include<algorithm>
 using namespace std;
 /*
     functions for client 
@@ -31,12 +32,26 @@ using namespace std;
 */
 
 int main(){
-    vector<int> vec2{1,3,4,5,6,7};
+    vector<int> vec2{1,3,5,9,7};
     vector<int> vec1{12,15,14,11,17,18};
     int ranks[6]={2,3,4,5,1,6};
     string s ="abcdef";
 
-    #if 1
+    BinaryTree<decltype(vec2)> b1(vec2);
+    //find
+    auto it = find(b1.begin(), b1.end(), 2);
+    cout<<"value = ";
+    cout<<*it<<endl;
+    //all_of
+    if ( std::all_of(b1.begin(), b1.end(), [](int i){return i%2;}) )
+        cout << "All the elements are odd numbers.\n";
+
+    //count
+    int ct = count(b1.begin(), b1.end(), 100);
+    cout<<"count = "<<ct<<endl;
+    
+
+    #if 0
     {
         //case 1 : given vector of integers
         cout<<"Given vector of integers\n";

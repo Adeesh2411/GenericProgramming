@@ -15,7 +15,7 @@ class TreeStruct{
     }
     int rank_;
     TreeStruct *left, *right, *up;
-    T data_;
+    const T data_;
     bool rankExists;
     bool operator<(const TreeStruct<T>& rhs);
     bool operator!=(const TreeStruct<T>& rhs);
@@ -85,7 +85,6 @@ class BinaryTree{
         using value_type = T2;
         using pointer = T2*;
         using const_reference = const T2&;
-        using reference = T2&;
 
         //operator overloading ...
         void operator =(const BinaryTree<T1, T2>& rhs); // copy operator (=)
@@ -102,18 +101,24 @@ class BinaryTree{
         class iterator{
             //implement ++(pre and post for level order traversal)
             public:
-                iterator(TreeStruct<T2> *curObj){
-                    if(curObj!=nullptr){
-                        nodePointer.push(curObj);
+                iterator(TreeStruct<T2> *CurObj){
+                    if(CurObj!=nullptr){
+                        nodePointer.push(CurObj);
                         addChilds();
                     }
                 }
                 iterator& operator++();//pre
                 iterator operator++(int);//post
-                T2& operator*(); 
+                T2 operator*(); 
                 bool operator==(const iterator& obj);
                 bool operator!=(const iterator& obj);
                 bool isLeafNode();
+                //type traits
+                using difference_type = std::ptrdiff_t;
+                using value_type = T2;
+                using pointer = T2*;
+                using reference =const T2&;
+                using iterator_category = std::forward_iterator_tag;
             private:
                 void addChilds();
                 std::queue<TreeStruct<T2>*> nodePointer;
@@ -644,7 +649,7 @@ typename BinaryTree<T1, T2>::iterator BinaryTree<T1, T2>::end(){
 //for Iterator class
 //pre increment
 template<typename T1, typename T2>
-typename BinaryTree<T1, T2>::iterator& BinaryTree<T1, T2>::iterator::operator++(){
+typename BinaryTree<T1, T2>::iterator& BinaryTree<T1, T2>::iterator::operator++(){//pre
     nodePointer.pop();
     addChilds();
     return *this;
@@ -671,7 +676,12 @@ void BinaryTree<T1, T2>::iterator::addChilds(){
 }
 
 template<typename T1, typename T2>
-T2& BinaryTree<T1, T2>::iterator::operator*(){
+T2 BinaryTree<T1, T2>::iterator::operator*(){
+    if(nodePointer.size() ==0)
+    {
+        std::cout<<"No value found\n";
+        return T2();
+    }
     return (nodePointer.front()->data_);  
 }
 
